@@ -10,10 +10,10 @@ class HabitDatabase extends ChangeNotifier {
   /// Initialize Isar DB
   static Future<void> initialize() async {
     final dir = await getApplicationDocumentsDirectory();
-    isar = await Isar.open(
-      [HabitSchema, AppSettingsSchema],
-      directory: dir.path,
-    );
+    isar = await Isar.open([
+      HabitSchema,
+      AppSettingsSchema,
+    ], directory: dir.path);
   }
 
   /* -------------------------------------------------------------------------- */
@@ -95,6 +95,18 @@ class HabitDatabase extends ChangeNotifier {
       await isar.habits.put(habit);
     });
 
+    await getAllHabits();
+  }
+
+  /// Update habit name
+  Future<void> updateHabitName(int id, String newName) async {
+    final habit = await isar.habits.get(id);
+    if (habit != null) {
+      await isar.writeTxn(() async {
+        habit.name = newName;
+        await isar.habits.put(habit);
+      });
+    }
     await getAllHabits();
   }
 
