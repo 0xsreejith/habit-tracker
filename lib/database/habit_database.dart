@@ -60,13 +60,44 @@ class HabitDatabase extends ChangeNotifier {
     await getAllHabits();
   }
 
-  /// Read all habits
+  /* -------------------------------------------------------------------------- */
+  /*                               HEATMAP DATA                                 */
+  /* -------------------------------------------------------------------------- */
+
+  DateTime? _firstLaunchDate;
+  final Map<DateTime, int> _heatMapDataset = {};
+
+  // Getters
+  DateTime? get firstLaunchDate => _firstLaunchDate;
+  Map<DateTime, int> get heatMapDataset => _heatMapDataset;
+
+  /// Read all habits and calculate heatmap dataset
   Future<void> getAllHabits() async {
     final data = await isar.habits.where().findAll();
 
     _habits
       ..clear()
       ..addAll(data);
+
+    // Calculate heatmap dataset
+    _heatMapDataset.clear();
+    for (var habit in _habits) {
+      for (var date in habit.completedDays) {
+        final normalizedDate = _normalizeDate(date);
+        if (_heatMapDataset.containsKey(normalizedDate)) {
+          _heatMapDataset[normalizedDate] =
+              _heatMapDataset[normalizedDate]! + 1;
+        } else {
+          _heatMapDataset[normalizedDate] = 1;
+        }
+      }
+    }
+
+    // Load first launch date if null
+    if (_firstLaunchDate == null) {
+      final settings = await isar.appSettings.where().findFirst();
+      _firstLaunchDate = settings?.firstLaunchDate ?? DateTime.now();
+    }
 
     notifyListeners();
   }

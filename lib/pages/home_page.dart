@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/components/app_drawer.dart';
 import 'package:habit_tracker/components/my_habit_tile.dart';
+import 'package:habit_tracker/components/my_heat_map.dart';
 import 'package:habit_tracker/database/habit_database.dart';
 import 'package:habit_tracker/models/habit.dart';
-import 'package:habit_tracker/pages/habit_detail_page.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -39,6 +39,15 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               // get the new habit name
               String newHabitName = textController.text;
+
+              // validate simple
+              if (newHabitName.trim().isEmpty) {
+                // optional: show simple snackbar or just return
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Habit name cannot be empty')),
+                );
+                return;
+              }
 
               // save to db
               context.read<HabitDatabase>().createHabit(newHabitName);
@@ -90,6 +99,15 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               // get the new habit name
               String newHabitName = textController.text;
+
+              // validate simple
+              if (newHabitName.trim().isEmpty) {
+                // optional: show simple snackbar or just return
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Habit name cannot be empty')),
+                );
+                return;
+              }
 
               // save to db
               context.read<HabitDatabase>().updateHabitName(
@@ -186,35 +204,56 @@ class _HomePageState extends State<HomePage> {
     List<Habit> currentHabits = habitDatabase.habits;
 
     // return list
-    return ListView.builder(
-      itemCount: currentHabits.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemBuilder: (context, index) {
-        // get each individual habit
-        final habit = currentHabits[index];
+    return ListView(
+      children: [
+        // HEATMAP
+        FutureBuilder(
+          future: habitDatabase.getFirstDate(),
+          builder: (context, snapshot) {
+            // once the date is available
+            if (snapshot.hasData) {
+              return MyHeatMap(
+                startDate: snapshot.data!,
+                datasets: habitDatabase.heatMapDataset,
+              );
+            } else {
+              return Container();
+            }
+          },
+        ),
 
-        // check if the habit is completed today
-        bool isCompletedToday = isHabitCompletedToday(habit.completedDays);
+        // HABIT LIST
+        ListView.builder(
+          itemCount: currentHabits.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, index) {
+            // get each individual habit
+            final habit = currentHabits[index];
 
-        // return habit tile UI
-        return MyHabitTile(
-          text: habit.name,
-          isCompleted: isCompletedToday,
-          onChanged: (value) => checkHabitOnOff(value, habit),
-          editHabit: (context) => editHabitBox(habit),
-          deleteHabit: (context) => deleteHabitBox(habit),
-          onTap: () {
-            // navigate to habit detail page
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HabitDetailPage(habit: habit),
-              ),
+            // check if the habit is completed today
+            bool isCompletedToday = isHabitCompletedToday(habit.completedDays);
+
+            // return habit tile UI
+            return MyHabitTile(
+              text: habit.name,
+              isCompleted: isCompletedToday,
+              onChanged: (value) => checkHabitOnOff(value, habit),
+              editHabit: (context) => editHabitBox(habit),
+              deleteHabit: (context) => deleteHabitBox(habit),
+              onTap: () {
+                // Feature change: No detail page.
+                // Toggle completion status on tap same as checkbox, for now do nothing or standard tile behavior?
+                // Requirements say "No Habit Detail page is required".
+                // I'll checkHabitOnOff just like checkbox if they tap the tile, or do nothing.
+                // Let's do nothing or simple logic. User might expect tap to check.
+                // But let's leave onTap empty as it's not specified.
+                checkHabitOnOff(!isCompletedToday, habit);
+              },
             );
           },
-        );
-      },
+        ),
+      ],
     );
   }
 
