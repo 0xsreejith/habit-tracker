@@ -3,6 +3,7 @@ import 'package:habit_tracker/components/app_drawer.dart';
 import 'package:habit_tracker/components/my_habit_tile.dart';
 import 'package:habit_tracker/database/habit_database.dart';
 import 'package:habit_tracker/models/habit.dart';
+import 'package:habit_tracker/pages/habit_detail_page.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -203,6 +204,15 @@ class _HomePageState extends State<HomePage> {
           onChanged: (value) => checkHabitOnOff(value, habit),
           editHabit: (context) => editHabitBox(habit),
           deleteHabit: (context) => deleteHabitBox(habit),
+          onTap: () {
+            // navigate to habit detail page
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HabitDetailPage(habit: habit),
+              ),
+            );
+          },
         );
       },
     );

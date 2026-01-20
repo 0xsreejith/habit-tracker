@@ -79,11 +79,20 @@ class HabitDatabase extends ChangeNotifier {
     final today = _normalizeDate(DateTime.now());
 
     await isar.writeTxn(() async {
+      // Logic: Save today's completion status, Preserve previous dates
+      // If checks, add today if not present
       if (isCompleted) {
-        if (!habit.completedDays.contains(today)) {
+        if (!habit.completedDays.any(
+          (date) =>
+              date.year == today.year &&
+              date.month == today.month &&
+              date.day == today.day,
+        )) {
           habit.completedDays.add(today);
         }
-      } else {
+      }
+      // If unchecks, remove today
+      else {
         habit.completedDays.removeWhere(
           (date) =>
               date.year == today.year &&

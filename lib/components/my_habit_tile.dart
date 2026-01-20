@@ -6,6 +6,7 @@ class MyHabitTile extends StatelessWidget {
   final void Function(bool?)? onChanged;
   final void Function(BuildContext)? editHabit;
   final void Function(BuildContext)? deleteHabit;
+  final void Function()? onTap;
 
   const MyHabitTile({
     super.key,
@@ -14,6 +15,7 @@ class MyHabitTile extends StatelessWidget {
     required this.onChanged,
     required this.editHabit,
     required this.deleteHabit,
+    required this.onTap,
   });
 
   @override
@@ -29,6 +31,7 @@ class MyHabitTile extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(12),
         child: ListTile(
+          onTap: onTap,
           // Checkbox to mark as completed
           leading: Checkbox(
             activeColor: Colors.green,
