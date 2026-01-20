@@ -10,10 +10,10 @@ class HabitDatabase extends ChangeNotifier {
   /// Initialize Isar DB
   static Future<void> initialize() async {
     final dir = await getApplicationDocumentsDirectory();
-    isar = await Isar.open(
-      [HabitSchema, AppSettingsSchema],
-      directory: dir.path,
-    );
+    isar = await Isar.open([
+      HabitSchema,
+      AppSettingsSchema,
+    ], directory: dir.path);
   }
 
   /* -------------------------------------------------------------------------- */
@@ -60,13 +60,44 @@ class HabitDatabase extends ChangeNotifier {
     await getAllHabits();
   }
 
-  /// Read all habits
+  /* -------------------------------------------------------------------------- */
+  /*                               HEATMAP DATA                                 */
+  /* -------------------------------------------------------------------------- */
+
+  DateTime? _firstLaunchDate;
+  final Map<DateTime, int> _heatMapDataset = {};
+
+  // Getters
+  DateTime? get firstLaunchDate => _firstLaunchDate;
+  Map<DateTime, int> get heatMapDataset => _heatMapDataset;
+
+  /// Read all habits and calculate heatmap dataset
   Future<void> getAllHabits() async {
     final data = await isar.habits.where().findAll();
 
     _habits
       ..clear()
       ..addAll(data);
+
+    // Calculate heatmap dataset
+    _heatMapDataset.clear();
+    for (var habit in _habits) {
+      for (var date in habit.completedDays) {
+        final normalizedDate = _normalizeDate(date);
+        if (_heatMapDataset.containsKey(normalizedDate)) {
+          _heatMapDataset[normalizedDate] =
+              _heatMapDataset[normalizedDate]! + 1;
+        } else {
+          _heatMapDataset[normalizedDate] = 1;
+        }
+      }
+    }
+
+    // Load first launch date if null
+    if (_firstLaunchDate == null) {
+      final settings = await isar.appSettings.where().findFirst();
+      _firstLaunchDate = settings?.firstLaunchDate ?? DateTime.now();
+    }
 
     notifyListeners();
   }
@@ -79,11 +110,20 @@ class HabitDatabase extends ChangeNotifier {
     final today = _normalizeDate(DateTime.now());
 
     await isar.writeTxn(() async {
+      // Logic: Save today's completion status, Preserve previous dates
+      // If checks, add today if not present
       if (isCompleted) {
-        if (!habit.completedDays.contains(today)) {
+        if (!habit.completedDays.any(
+          (date) =>
+              date.year == today.year &&
+              date.month == today.month &&
+              date.day == today.day,
+        )) {
           habit.completedDays.add(today);
         }
-      } else {
+      }
+      // If unchecks, remove today
+      else {
         habit.completedDays.removeWhere(
           (date) =>
               date.year == today.year &&
@@ -95,6 +135,18 @@ class HabitDatabase extends ChangeNotifier {
       await isar.habits.put(habit);
     });
 
+    await getAllHabits();
+  }
+
+  /// Update habit name
+  Future<void> updateHabitName(int id, String newName) async {
+    final habit = await isar.habits.get(id);
+    if (habit != null) {
+      await isar.writeTxn(() async {
+        habit.name = newName;
+        await isar.habits.put(habit);
+      });
+    }
     await getAllHabits();
   }
 
