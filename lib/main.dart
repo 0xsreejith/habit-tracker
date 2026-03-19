@@ -1,38 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:habit_tracker/database/habit_database.dart';
-import 'package:habit_tracker/pages/home_page.dart';
-import 'package:habit_tracker/theme/theme_provider.dart';
+import 'package:habit_tracker/app/app.dart';
+import 'package:habit_tracker/core/theme/theme_provider.dart';
+import 'package:habit_tracker/services/habit_database.dart';
 import 'package:provider/provider.dart';
 
-void main() async{
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await HabitDatabase.initialize();
-  await HabitDatabase().saveFirstDate();
+
+  final database = HabitDatabase();
+  await database.saveFirstDate();
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (context) => ThemeProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => HabitDatabase(),
-        ),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => database),
       ],
-      child: const MyApp(),
+      child: const HabitTrackerApp(),
     ),
   );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: Provider.of<ThemeProvider>(context).themeData,
-     home: HomePage(),
-    );
-  }
 }

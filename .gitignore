@@ -1,9 +1,24 @@
-# Flutter/Dart/Pub related
+# Flutter / Dart
 .dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
 .packages
-.pub-cache/
 .pub/
+.pub-cache/
 build/
+coverage/
+*.log
+
+# Environment / secrets
+.env
+.env.*
+*.env
+android/key.properties
+keystore/
+*.jks
+*.keystore
+android/app/*.jks
+android/app/*.keystore
 
 # Android
 android/.gradle/
@@ -13,13 +28,17 @@ android/local.properties
 ios/Pods/
 ios/.symlinks/
 ios/Flutter/ephemeral/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
 
 # macOS
 macos/Flutter/ephemeral/
 
 # IDE
 .idea/
+.vscode/
 *.iml
 
 # OS
 .DS_Store
+Thumbs.db
