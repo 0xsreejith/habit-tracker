@@ -1,3 +1,4 @@
+import org.gradle.api.GradleException
 import java.util.Properties
 
 plugins {
@@ -11,6 +12,21 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
+
+val releaseStoreFilePath = keystoreProperties.getProperty("storeFile")
+val releaseStorePassword = keystoreProperties.getProperty("storePassword")
+val releaseKeyAlias = keystoreProperties.getProperty("keyAlias")
+val releaseKeyPassword = keystoreProperties.getProperty("keyPassword")
+
+val hasReleaseSigning =
+    !releaseStoreFilePath.isNullOrBlank() &&
+    !releaseStorePassword.isNullOrBlank() &&
+    !releaseKeyAlias.isNullOrBlank() &&
+    !releaseKeyPassword.isNullOrBlank() &&
+    file(releaseStoreFilePath).exists()
+
+val isReleaseTaskRequested =
+    gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
 
 android {
     namespace = "com.example.habit_tracker"
@@ -36,20 +52,36 @@ android {
 
     signingConfigs {
         create("release") {
-            val storePath = keystoreProperties.getProperty("storeFile")
-            if (storePath != null) {
-                storeFile = file(storePath)
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
+            if (hasReleaseSigning) {
+                storeFile = file(releaseStoreFilePath!!)
+                storePassword = releaseStorePassword!!
+                keyAlias = releaseKeyAlias!!
+                keyPassword = releaseKeyPassword!!
             }
         }
     }
 
     buildTypes {
         release {
-            // Production signing from key.properties (never use debug signing for release).
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            } else if (isReleaseTaskRequested) {
+                throw GradleException(
+                    """
+                    Missing Android release signing configuration.
+
+                    Required:
+                    1) android/key.properties
+                    2) android/app/upload-keystore.jks
+
+                    key.properties must include:
+                    storePassword=...
+                    keyPassword=...
+                    keyAlias=upload
+                    storeFile=upload-keystore.jks
+                    """.trimIndent(),
+                )
+            }
         }
     }
 }

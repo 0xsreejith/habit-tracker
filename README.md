@@ -1,41 +1,40 @@
 # Gridly
 
-A clean, mobile-first habit tracking app built with Flutter.
+Gridly is a production-ready habit tracker built with Flutter for mobile platforms.
 
-## 📱 Mobile-Only Scope
+## Mobile-Only Support
 
-This project supports **Android and iOS only**.
+This project is Android mobile only.
+Web is not supported.
 
-- Web is **not supported**.
-- Desktop platforms are **not supported**.
-- CI is configured for mobile checks only.
-- Isar is used as a native mobile database (no web target in release flow).
+- No web build pipeline is included.
+- Isar is used as a native mobile database.
 
-## ✨ Features
+## Features
 
 - Create, edit, and delete habits
-- Mark daily completion with one tap
-- Visual consistency heatmap
-- Persistent light/dark theme toggle
-- Offline-first local storage with Isar
+- Daily completion tracking
+- Heatmap-style progress visualization
+- Light and dark theme support
+- Offline-first local persistence
 
-## 📸 Screenshots
+## Screenshots
 
-Add screenshots in `docs/screenshots/` and reference them here:
+Add screenshots under `docs/screenshots/` and reference them here.
 
 - Home screen
-- Habit creation dialog
-- Dark mode
-- Heatmap progress
+- Add/edit habit dialog
+- Theme toggle state
+- Progress heatmap
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - Flutter (Dart)
-- Provider (state management)
-- Isar (local database)
-- Shared Preferences (lightweight settings)
+- Provider
+- Isar
+- Shared Preferences
 
-## 📂 Folder Structure
+## Project Structure
 
 ```text
 lib/
@@ -52,71 +51,66 @@ lib/
   services/
     habit_database.dart
   main.dart
-
-test/
-  widget_test.dart
 ```
 
-## ⚙️ Installation
+## Setup
 
-### Prerequisites
+1. Install Flutter SDK.
+2. Run `flutter pub get`.
+3. Run `flutter run`.
 
-- Flutter SDK installed (`flutter --version`)
-- Android Studio and/or Xcode
-
-### Setup
-
-```bash
-flutter pub get
-```
-
-### Run
-
-```bash
-flutter run
-```
-
-### Quality Checks
+## Quality Commands
 
 ```bash
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
-flutter build apk --debug
 ```
 
-## 🔐 Android Release Signing
+## Android Release Signing
 
-1. Copy template:
+1. Copy `android/key.properties.example` to `android/key.properties`.
+2. Fill in real keystore credentials.
+3. Place your keystore at `android/app/upload-keystore.jks`.
+4. Keep keystore and `key.properties` out of source control.
+
+Expected structure:
+
+```text
+android/
+  key.properties
+  app/
+    upload-keystore.jks
+```
+
+Local release validation:
 
 ```bash
-cp android/key.properties.example android/key.properties
+flutter clean
+flutter pub get
+flutter build apk --release
 ```
 
-2. Fill real values in `android/key.properties`.
-3. Keep your `.jks`/keystore file outside source control.
+## CI/CD
 
-`android/key.properties` and keystore files are ignored by `.gitignore`.
+Workflow file: `.github/workflows/build-apk.yml`
 
-## 🤝 Contribution Guide
+Pipeline steps:
+
+- Checkout
+- Setup Java 17
+- Setup Flutter
+- Dependency install
+- Analyze and test
+- Build Android release APK
+- Upload release APK artifact
+
+## Contribution
 
 1. Branch from `develop`.
-2. Use conventional commits (`feat:`, `fix:`, `chore:`).
-3. Ensure analyze/test/build checks pass.
-4. Open PR with checklist completion.
+2. Use conventional commits.
+3. Run quality commands before PR.
 
-## 🔁 CI/CD
-
-GitHub Actions runs:
-
-- `flutter pub get`
-- formatting verification
-- `flutter analyze`
-- `flutter test`
-- Android APK debug build
-
-Workflow file: `.github/workflows/flutter-ci.yml`
-
-## 📄 License
+## License
 
 MIT License. See `LICENSE`.
